@@ -82,12 +82,9 @@ namespace battle_of_cards_grupauderzeniowa
                     else   //dealer: nothing
                     {
                         bool qualify = false;
-                        foreach (Card item in dealerHand)
+                        if (dealerHand[0].Rank == Ranks.Ace && dealerHand[1].Rank == Ranks.King)
                         {
-                            if (item.Rank == Ranks.Ace || item.Rank==Ranks.King)  //reka kwalifikacyjna
-                            {
-                                qualify = true;
-                            }
+                            qualify = true;
                         }
                         if (qualify)
                         {
