@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Data.Sqlite;
 
 namespace battle_of_cards_grupauderzeniowa
 {
@@ -52,7 +53,6 @@ namespace battle_of_cards_grupauderzeniowa
                             Console.WriteLine("You lost your Call/Ante");
                             Console.WriteLine("Press any key");
                             Console.ReadKey();
-                            //gambler.SetMoney(gambler.GetMoney() - 3 * ante);
                         } 
                         if(outcome == -1) 
                         {
@@ -69,7 +69,7 @@ namespace battle_of_cards_grupauderzeniowa
                             if (generalhand == "st") {agregate = 4;}
                             if (generalhand == "tr") {agregate = 3;}
                             if (generalhand == "dp") {agregate = 2;}
-                            gambler.SetMoney(gambler.GetMoney() + agregate*3*ante + 3*ante);
+                            gambler.SetMoney(gambler.GetMoney() + agregate*2*ante + ante);
                         }
                         if(outcome == 0) 
                         {
@@ -82,7 +82,7 @@ namespace battle_of_cards_grupauderzeniowa
                     else   //dealer: nothing
                     {
                         bool qualify = false;
-                        if (dealerHand[0].Rank == Ranks.Ace && dealerHand[1].Rank == Ranks.King)
+                        if (dealerHand[4].Rank == Ranks.Ace || dealerHand[0].Rank == Ranks.King)
                         {
                             qualify = true;
                         }
@@ -111,7 +111,7 @@ namespace battle_of_cards_grupauderzeniowa
                                 if (generalhand == "st") {agregate = 4;}
                                 if (generalhand == "tr") {agregate = 3;}
                                 if (generalhand == "dp") {agregate = 2;}
-                                gambler.SetMoney(gambler.GetMoney() + agregate*3*ante + 3*ante);
+                                gambler.SetMoney(gambler.GetMoney() + agregate*2*ante + ante);
                             }
                             if(outcome == 0) 
                             {
@@ -152,6 +152,41 @@ namespace battle_of_cards_grupauderzeniowa
                 else Console.WriteLine("You lost ${0}. Next time will be better", 500 - finalscore);
             }
             else Console.WriteLine("End of the Game. You lost all your money");
+            Console.Write("Enter your NickName: ");
+            string my_name = Console.ReadLine();
+            int my_score = finalscore - 500;
+            var connectionStringBuilder = new SqliteConnectionStringBuilder();
+            connectionStringBuilder.DataSource = "./baza.db";
+            using(var connection = new SqliteConnection(connectionStringBuilder.ConnectionString))
+            {
+                connection.Open();
+                /*var delTabCmd = connection.CreateCommand();
+                delTabCmd.CommandText = "DROP TABLE karaiby";
+                delTabCmd.ExecuteNonQuery();
+                var createTabCmd = connection.CreateCommand();
+                createTabCmd.CommandText = "CREATE TABLE karaiby(name VARCHAR(10), score INT)";
+                createTabCmd.ExecuteNonQuery();*/
+                using(var transaction = connection.BeginTransaction())
+                {
+                    var insertCmd = connection.CreateCommand();
+                    insertCmd.CommandText = $"INSERT INTO karaiby VALUES ('{my_name}', {my_score})";
+                    insertCmd.ExecuteNonQuery();
+                    /*insertCmd.CommandText = "INSERT INTO karaiby VALUES ('Dorota', 120)";
+                    insertCmd.ExecuteNonQuery();*/
+                    transaction.Commit();
+                }
+                var selectCmd = connection.CreateCommand();
+                selectCmd.CommandText = "SELECT name, score FROM karaiby ORDER BY score DESC LIMIT 5";
+                using(var reader = selectCmd.ExecuteReader())
+                {
+                    Console.WriteLine("Up to date scores:");
+                    while(reader.Read())
+                    {
+                        var message = reader.GetString(0) + " " + reader.GetString(1);
+                        Console.WriteLine(message);
+                    }
+                }
+            }
         }
 
         public List<Card> Turn(List<Card> lc)

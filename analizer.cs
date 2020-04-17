@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace battle_of_cards_grupauderzeniowa
 {
-    static class Analisis
+    public static class Analisis
     {
         public static HandCombination HandAnalizer(List<Card> hand)
         {
